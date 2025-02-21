@@ -1,7 +1,7 @@
 # 🤖 AutoTab
 
 <div align="center">
-  <img src="images/preview.png" alt="AutoTab Preview" width="100%">
+  <img src="images/preview.png" alt="AutoTab Preview" width="50%">
 
 [![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)](https://www.javascript.com/)
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-green?style=for-the-badge&logo=google-chrome&logoColor=white)](https://chrome.google.com/webstore)
