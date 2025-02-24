@@ -91,7 +91,7 @@ async function updateTextbox(request, sender) {
 IMPORTANT: You must ONLY respond with a JSON object in this exact format:
 {
   "completion": "your primary completion suggestion",
-  "lastWord": "the last complete word this continues from",
+  "lastWord": "Return the final complete word from the original text that the continuation is based on. If the continuation is only a fragment of a word, return an empty string to indicate that no additional space should be added.",
   "alternatives": ["alternative1", "alternative2", "alternative3"],
   "confidence": 0.9
 }
@@ -104,8 +104,8 @@ Rules:
 5. Consider the input field's context (label, placeholder, etc.) to provide relevant completions
 6. Use nearby text and form context to understand the expected input
 7. Return ONLY the JSON object, no other text
-8. For lastWord, if completing a partial word (e.g. "differe"), provide the full word it completes to ("different")
-9. For lastWord, if starting a new word after a complete word, provide that complete word (e.g. for "different name", lastWord would be "name")`
+8. For lastWord: When the continuation completes a partially typed word (e.g. "s" becoming "some" or "giv" becoming "give"), return an empty string ("") to indicate that no additional space should be inserted before the new text.
+9. For lastWord: When the continuation starts a new word following a complete word (e.g. "some" leading into "ideas"), return that complete word to indicate that a space should be added before the new text.`
           },
           {
             "role": "user",
