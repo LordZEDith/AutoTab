@@ -42,46 +42,34 @@ function formatDebounceTime(value) {
 // Save settings to Chrome storage
 async function saveSettings(e) {
   e.preventDefault();
-  saveButton.disabled = true;
-  
-  const apiKey = settingsForm.apiKey.value.trim();
-  const modelTemp = settingsForm.modelTemp.value;
-  const debounceTime = settingsForm.debounceTime.value;
-  const waitForPause = settingsForm.waitForPause.checked;
-  const useGhostText = settingsForm.useGhostText.checked;
-  
-  // Validate API key format
-  if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
-    showStatus('Invalid API key format', true);
-    saveButton.disabled = false;
-    return;
+  const formData = new FormData(settingsForm);
+  const apiKey = formData.get('apiKey');
+  const modelTemp = formData.get('modelTemp');
+  const debounceTime = formData.get('debounceTime');
+  const waitForPause = formData.get('waitForPause') === 'on';
+  const useGhostText = formData.get('useGhostText') === 'on';
+  const isEnabled = formData.get('isEnabled') === 'on';
+
+  // Validate API key
+  if (apiKey) {
+    const isValid = await validateApiKey(apiKey);
+    if (!isValid) {
+      showStatus('Invalid API key', true);
+      return;
+    }
   }
-  
-  // Show loading state
-  saveButton.textContent = 'Validating...';
-  
-  // Validate API key with OpenAI
-  const isValid = await validateApiKey(apiKey);
-  
-  if (!isValid) {
-    showStatus('Invalid API key', true);
-    saveButton.textContent = 'Save Settings';
-    saveButton.disabled = false;
-    return;
-  }
-  
-  // Save settings
-  settings.apiKey = apiKey;
-  settings.modelTemp = modelTemp;
-  settings.debounceTime = debounceTime;
-  settings.waitForPause = waitForPause;
-  settings.useGhostText = useGhostText;
-  
-  await chrome.storage.sync.set(settings);
-  showStatus('Settings saved successfully');
-  
-  saveButton.textContent = 'Save Settings';
-  saveButton.disabled = false;
+
+  // Save to storage
+  await chrome.storage.sync.set({
+    apiKey,
+    modelTemp,
+    debounceTime,
+    waitForPause,
+    useGhostText,
+    isEnabled
+  });
+
+  showStatus('Settings saved!');
 }
 
 // Initialize the settings in the popup
@@ -92,6 +80,10 @@ async function loadSettings() {
   if (settings.apiKey) {
     document.getElementById('apiKey').value = settings.apiKey;
   }
+  
+  // Set enabled state
+  const isEnabled = settings.isEnabled !== false; // Default to true if not set
+  document.getElementById('isEnabled').checked = isEnabled;
   
   // Set and display temperature value
   const temp = settings.modelTemp || '1.0';

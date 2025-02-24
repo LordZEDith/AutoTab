@@ -126,6 +126,8 @@ function formatDebounceTime(value) {
 
 // Get text content from different types of editors
 function getEditorContent(element) {
+  if (!element) return '';
+
   if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
     return element.value;
   }
@@ -135,13 +137,13 @@ function getEditorContent(element) {
   }
 
   // Handle different editor frameworks
-  if (element.classList.contains('monaco-editor')) {
+  if (element.classList?.contains('monaco-editor')) {
     // Monaco editor handling
     const model = element.querySelector('.monaco-editor')?.['_modelData']?.['model'];
     return model ? model.getValue() : '';
   }
 
-  if (element.classList.contains('CodeMirror')) {
+  if (element.classList?.contains('CodeMirror')) {
     // CodeMirror handling
     return element.CodeMirror?.getValue() || '';
   }

@@ -1,11 +1,16 @@
-const debug = false;
+const debug = true;
 
 // Track active element and its mutation observer
 let activeElement = null;
 let activeObserver = null;
 let lastTypingTime = Date.now();
 let debounceTimer = null;
-let settings = { debounceTime: 0, waitForPause: false, useGhostText: false };
+let settings = { 
+  debounceTime: 0, 
+  waitForPause: false, 
+  useGhostText: false,
+  isEnabled: true  // Default to enabled
+};
 let lastCompletionTime = 0; // Track when the last completion was accepted
 let hasTypedSinceCompletion = true; // Track if user has typed since last completion
 let currentGhostText = null; // Track current ghost text element
@@ -232,10 +237,11 @@ function positionTooltip(tooltip, target) {
 
 // Load settings from storage
 async function loadSettings() {
-  const stored = await chrome.storage.sync.get(['debounceTime', 'waitForPause', 'useGhostText']);
+  const stored = await chrome.storage.sync.get(['debounceTime', 'waitForPause', 'useGhostText', 'isEnabled']);
   settings.debounceTime = parseFloat(stored.debounceTime || 0) * 1000; // Convert to milliseconds
   settings.waitForPause = stored.waitForPause || false;
   settings.useGhostText = stored.useGhostText || false;
+  settings.isEnabled = stored.isEnabled !== false; // Default to true if not set
 }
 
 // Initialize settings
@@ -252,10 +258,21 @@ chrome.storage.onChanged.addListener((changes) => {
   if (changes.useGhostText) {
     settings.useGhostText = changes.useGhostText.newValue || false;
   }
+  if (changes.isEnabled !== undefined) {
+    settings.isEnabled = changes.isEnabled.newValue;
+    if (!settings.isEnabled) {
+      // Clean up any UI elements when disabled
+      document.querySelectorAll('.ai-autotab-tooltip').forEach(t => t.remove());
+      removeGhostText();
+      resetSuggestionState();
+    }
+  }
 });
 
 // Handle input events
 function handleInput(event) {
+  if (!settings.isEnabled) return; // Skip processing if disabled
+  
   const element = event.target;
   
   if (!isValidInputField(element)) return;
@@ -1346,9 +1363,10 @@ function createGhostText(completion, lastWord, completeWord = '') {
 function removeGhostText() {
   if (currentGhostText) {
     if (debug) {
-      const content = getEditorContent(activeElement);
-      const cursorPos = getCursorPosition(activeElement);
-      const textBeforeCursor = content.slice(0, cursorPos);
+      // Only try to get editor content if activeElement exists
+      const content = activeElement ? getEditorContent(activeElement) : '';
+      const cursorPos = activeElement ? getCursorPosition(activeElement) : 0;
+      const textBeforeCursor = content ? content.slice(0, cursorPos) : '';
       const currentWordMatch = textBeforeCursor.match(/\S+$/);
       const currentWord = currentWordMatch ? currentWordMatch[0] : '';
       
